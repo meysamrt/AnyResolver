@@ -15,4 +15,4 @@ Gets a PersianDate object that is set to the today date and time.
 `var pdate=PersianDate.yesterday;`  
 Gets a PersianDate object that is set to the yesterday date and time.  
 
-[View Full Document](https://github.com/meysamrt/AnyResolver/wiki/PersianDate)
+[View Full Documentation](https://github.com/meysamrt/AnyResolver/wiki/PersianDate)
