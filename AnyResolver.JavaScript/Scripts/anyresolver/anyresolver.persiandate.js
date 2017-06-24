@@ -37,7 +37,6 @@ $.extend($.enums.fa,
     });
 var PersianDate = (function () {
 
-    // Variables
     var lambdaCoefficients = [280.46645, 36000.76983, 0.0003032];
     var anomalyCoefficients = [357.5291, 35999.0503, -0.0001559, -4.8E-07];
     var eccentricityCoefficients = [0.016708617, -4.2037E-05, -1.236E-07];
@@ -46,8 +45,6 @@ var PersianDate = (function () {
     var coefficientsB = [201.11, 72001.5377, 0.00057];
 
     var daysToMonth = [0, 31, 62, 93, 124, 155, 186, 216, 246, 276, 306, 336, 366];
-    //var daysInMonth365 = [31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29];
-    //var daysInMonth366 = [31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 30];
 
     var coefficients1900To1987 = [-2E-05, 0.000297, 0.025184, -0.181133, 0.55304, -0.861938, 0.677066, -0.212591];
     var coefficients1800To1899 = [-9E-06, 0.003844, 0.083563, 0.865736, 4.867575, 15.845535, 31.332267, 38.291999, 28.316289, 11.636204, 2.043794];
@@ -80,7 +77,6 @@ var PersianDate = (function () {
         new EphemerisCorrectionAlgorithmMap(-2147483648, correctionAlgorithm.Default)
     ];
 
-    // Leap year calculation functions
 
     function angle(degrees, minutes, seconds) {
         return (seconds / 60 + minutes) / 60 + degrees;
@@ -102,7 +98,7 @@ var PersianDate = (function () {
 
     function ticksToDate(ticks) {
         if (ticks < 0 || ticks > 3155378941640251632)
-            throw new Error("Ticks value must be between 0 and 3155378941640251632.(Object: PersianDate, Function: ticksToDate, Argument: ticks)");
+            throw new Error("Ticks value must be between 0 and 3155378941640251632.");
         var year = 1, month = 0, day = 1;
         ticks /= 10000;
 
@@ -357,7 +353,7 @@ var PersianDate = (function () {
         if (value < 1 || value > 9377)
             throw new Error("Year must be between 1 and 9377.");
     }
-    function validateMonth(value,year) {
+    function validateMonth(value, year) {
         if (value < 1 || value > 12)
             throw new Error("Month must be between 1 and 12.");
     }
@@ -365,10 +361,6 @@ var PersianDate = (function () {
         input = input.toString();
         return input.length >= len ? input : new Array(len - input.length + 1).join(char) + input;
     }
-    //function validateDay(value) {
-    //    if (value < 1 || value > PersianDate.getDaysInMonth(self.year, self.month))
-    //        throw new Error("Day must be between 1 and " + PersianDate.getDaysInMonth(self.year, self.month) + ".");
-    //}
 
     function persianDateConstructor(year, month, day, hour, minute, second, millisecond) {
         var _year, _month, _day;
@@ -387,7 +379,7 @@ var PersianDate = (function () {
                 month: {
                     get: function () { return _month; },
                     set: function (value) {
-                        validateMonth(value,self.year);
+                        validateMonth(value, self.year);
                         _month = value;
                     }
                 },
@@ -500,7 +492,7 @@ var PersianDate = (function () {
                 lastDateOfYear: {
                     get: function () { return new PersianDate(self.year, 12, PersianDate.getDaysInMonth(self.year, 12)); }
                 },
-                date: {
+                datedate: {
                     get: function () { return new PersianDate(self.year, self.month, self.day); }
                 },
                 ticks: {
@@ -533,6 +525,36 @@ var PersianDate = (function () {
                     }
                 }
             });
+        if (arguments.length === 1) {
+            var date;
+            var argtype = typeof (year);
+            switch (argtype) {
+                case "string":
+                    date = PersianDate.parse(year);
+                    break;
+                case "number":
+                    date = PersianDate.fromTicks(year);
+                    break;
+                case "object":
+                    if (year instanceof Date)
+                        date = PersianDate.fromDate(year);
+                    else
+                        throw new Error("Invalid parameter.");
+                    break;
+                default:
+                    throw new Error("Invalid parameter.");
+            }
+            if (date) {
+                year = date.year;
+                month = date.month;
+                day = date.day;
+                hour = date.hour;
+                minute = date.minute;
+                second = date.second;
+                millisecond = date.millisecond;
+            }
+        }
+
         this.year = year || 1;
         this.month = month || 1;
         this.day = day || 1;
@@ -616,10 +638,7 @@ var PersianDate = (function () {
         toString: function (format) {
             format = format || "";
             var formattedText = "";
-            //if (format) {
-            //    var pattern = /y{0,4}|M{0,4}|d{0,4}|h{0,2}|H{0,2}|m{0,2}|s{0,2}|f{0,3}|z{0,4}/g;
-            //    var matches = format.match(pattern);
-            //}
+
             if (format) {
                 for (var i = 0, len = format.length; i < len; i++) {
                     var wildcard = format[i];
@@ -730,6 +749,102 @@ var PersianDate = (function () {
         });
         return monthName[month - 1];
     };
+    persianDateConstructor.parse = function (dateString) {
+        
+        if (!dateString.trim()) throw new Error("Invalid date and time.");
+        dateString = dateString.trim();
+        var pattern = /^((\d{1,4}\/\d{1,2}\/\d{1,2})?\s*(\d{1,2}\:\d{1,2}(\:\d{1,2}(\.\d{1,3})?)?)?)$/g;
+        var matches = dateString.match(pattern) || [];
+        var len = matches.length;
+        if (len === 0 || len > 1 || matches[0] !== dateString) throw new Error("Invalid date and time.");
+
+        var dateTimeParts = dateString.split(/\s+/g);
+        var date = "",time="";
+        if (dateTimeParts.length === 2) {
+            date = dateTimeParts[0];
+            time = dateTimeParts[1];
+        } else {
+            if (dateTimeParts[0].indexOf("/") > -1)
+                date = dateTimeParts[0];
+            else if (dateTimeParts[0].indexOf(":") > -1)
+                time = dateTimeParts[0];
+        }
+        if (!date && !time) throw new Error("Invalid date and time.");
+        var year = 1, month = 1, day = 1, hour = 0, minute = 0, second = 0, millisecond = 0;
+        var parts;
+        if (date) {
+            parts = date.split("/");
+            year = parseInt(parts[0]);
+            month = parseInt(parts[1]);
+            day = parseInt(parts[2]);
+        }
+        if (time) {
+            parts = time.split(/[:\.]/);
+            hour = parseInt(parts[0]);
+            minute = parseInt(parts[1]);
+            len = parts.length;
+            if(len>2)
+            second = parseInt(parts[2]);
+            if(len>3)
+            millisecond = parseInt(parts[3]);
+        }
+        return new PersianDate(year, month, day, hour, minute, second, millisecond);
+    }
+    persianDateConstructor.fromTicks = function(ticks) {
+        if (ticks < 0 || ticks > 2959075583999990000)
+            throw new Error("Ticks value must be between 0 and 3155378941640251632.");
+        var year = 1;
+        var month = 1;
+        var day = 1;
+        ticks /= 10000;
+
+        var ticksInDay = 86400000;
+        var ticksInYear = 31536000000;
+        year += parseInt(ticks / ticksInYear);
+        ticks %= ticksInYear;
+        if (year > 9377) {
+            var outYear = year - 9377;
+            year -= outYear;
+            ticks += outYear * ticksInYear;
+        }
+        var y = year - 1;
+
+        var fractions = parseInt(y / 450);
+        ticks -= fractions * 109 * ticksInDay;
+        if (y >= 8100)
+            ticks += ticksInDay;
+        var start = fractions * 450;
+        for (var i = start + 1; i <= y; i++) {
+            if (PersianDate.isLeap(i))
+                ticks -= ticksInDay;
+        }
+
+        while (ticks < 0) {
+            ticks += ticksInYear;
+            year--;
+            if (PersianDate.isLeap(year))
+                ticks+=ticksInDay;
+        }
+
+        var ticksInMonth = PersianDate.getDaysInMonth(year, month)*ticksInDay;
+        while (ticks >= ticksInMonth) {
+            ticks -= ticksInMonth;
+            month++;
+            ticksInMonth = PersianDate.getDaysInMonth(year, month) * ticksInDay;
+        }
+        
+
+        day +=parseInt(ticks / ticksInDay);
+        ticks %= ticksInDay;
+        var hour = parseInt(ticks / 3600000);
+        ticks %= 3600000;
+        var minute = parseInt(ticks / 60000);
+        ticks %= 60000;
+        var second = parseInt(ticks / 1000);
+        ticks %= 1000;
+        var millisecond = ticks;
+        return new PersianDate(year, month, day, hour, minute, second, millisecond);
+    };
     persianDateConstructor.fromDate = function (date) {
         if (!(date instanceof Date))
             throw new Error("Invalid date.");
@@ -748,16 +863,16 @@ var PersianDate = (function () {
         if (year > 9377) {
             var outYear = year - 9377;
             year -= outYear;
-             sum += outYear * 365;
+            sum += outYear * 365;
         }
         y = year - 1;
 
         var fractions = parseInt(y / 450);
         sum -= fractions * 109;
         if (y >= 8100)
-            sum ++;
+            sum++;
         var start = fractions * 450;
-        for (var i = start+1; i <= y; i++) {
+        for (var i = start + 1; i <= y; i++) {
             if (PersianDate.isLeap(i))
                 sum--;
         }

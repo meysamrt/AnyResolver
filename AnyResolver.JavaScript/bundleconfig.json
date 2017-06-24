@@ -1,0 +1,20 @@
+[
+  {
+    "outputFileName": "Scripts/anyresolver/anyresolver.persiandate.min.js",
+    "inputFiles": [
+      "Scripts/anyresolver/anyresolver.persiandate.js"
+    ]
+  },
+  {
+    "outputFileName": "Scripts/anyresolver/anyresolver.date.min.js",
+    "inputFiles": [
+      "Scripts/anyresolver/anyresolver.date.js"
+    ]
+  },
+  {
+    "outputFileName": "Scripts/anyresolver/anyresolver.cultureinfo.min.js",
+    "inputFiles": [
+      "Scripts/anyresolver/anyresolver.cultureinfo.js"
+    ]
+  }
+]

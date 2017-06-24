@@ -65,9 +65,14 @@
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="index.html" />
     <Content Include="packages.config" />
+    <Content Include="Scripts\anyresolver\anyresolver.cultureinfo.min.js">
+      <DependentUpon>anyresolver.cultureinfo.js</DependentUpon>
+    </Content>
     <Content Include="Scripts\anyresolver\anyresolver.date.js" />
     <Content Include="Scripts\anyresolver\anyresolver.cultureinfo.js" />
+    <None Include="bundleconfig.json" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -76,7 +81,13 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Scripts\anyresolver\anyresolver.date.min.js">
+      <DependentUpon>anyresolver.date.js</DependentUpon>
+    </Content>
     <Content Include="Scripts\anyresolver\anyresolver.persiandate.js" />
+    <Content Include="Scripts\anyresolver\anyresolver.persiandate.min.js">
+      <DependentUpon>anyresolver.persiandate.js</DependentUpon>
+    </Content>
     <Content Include="Scripts\jquery-3.1.1.js" />
     <Content Include="Scripts\jquery-3.1.1.min.js" />
     <Content Include="Web.config" />
