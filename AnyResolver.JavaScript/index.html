@@ -12,7 +12,8 @@
 
     var format = "dddd dd MMMM yyyy ساعت HH:mm:ss.fff";
     var date1 = PersianDate.now;
-    var date2 = new PersianDate(1396, 1, 11);
+    var date2 = new PersianDate(1390, 1, 11);
+
     showDate("Now: " +date1.toString(format));
     showDate("Day Name: " +date1.dayName);
     showDate("Day of Week: " + date1.dayOfWeek);
@@ -35,8 +36,18 @@
     showDate("Ticks of Year: " + date1.ticksOfYear);
     showDate("Week of Year: " +date1.weekOfYear);
     showDate("Weeks of Year: " +date1.weeksOfYear);
+    showDate("Add Months 5: " +date1.addMonths(5).toString());
+    showDate("Add Months -5: " + date1.addMonths(-5).toString());
 
-    
+    showDate("Add Months 25: " +date1.addMonths(25).toString());
+    showDate("Add Months -25: " + date1.addMonths(-25).toString());
+
+    showDate("Diff year date1 to date2: " + date1.diff(date2, $.enums.fa.dateParts.YEAR));
+    showDate("Diff year date2 to date1: " + date2.diff(date1, $.enums.fa.dateParts.YEAR));
+    showDate("Diff month date1 to date2: " + date1.diff(date2, $.enums.fa.dateParts.MONTH));
+    showDate("Diff month date2 to date1: " + date2.diff(date1, $.enums.fa.dateParts.MONTH));
+    showDate("Diff day date1 to date2: " + date1.diff(date2, $.enums.fa.dateParts.DAY));
+    showDate("Diff day date2 to date1: " + date2.diff(date1, $.enums.fa.dateParts.DAY));
 
     function showDate(input) {
         $("<div/>").text(input).appendTo("body");

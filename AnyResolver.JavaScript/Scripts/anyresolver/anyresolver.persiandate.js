@@ -683,7 +683,7 @@ var PersianDate = (function () {
                 }
 
             var date = this.toDate();
-            date.setDate(date.getDate() + n);
+            date.setDate(date.getDate() + sumOfDays);
             var persiandate = PersianDate.fromDate(date);
             return this.set(persiandate.year, persiandate.month, persiandate.day, persiandate.hour, persiandate.minute, persiandate.second, persiandate.millisecond);
         },
