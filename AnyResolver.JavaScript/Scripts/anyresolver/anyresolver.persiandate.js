@@ -33,9 +33,28 @@ $.extend($.enums.fa,
             "DEY": "دی",
             "BAHMAN": "بهمن",
             "ESFAND": "اسفند"
+        },
+        seasonName: {
+            "SPRING": "بهار",
+            "SUMMER": "تابستان",
+            "AUTUMN": "پاییز",
+            "WINTER": "زمستان"
+        },
+        dateParts: {
+            "YEAR": 0,
+            "MONTH": 1,
+            "DAY": 2,
+            "HOUR": 3,
+            "MINUTE": 4,
+            "SECOND": 5,
+            "MILLISECOND": 6,
+            "WEEK": 7,
+            "SEASON": 8
         }
     });
 var PersianDate = (function () {
+
+
 
     var lambdaCoefficients = [280.46645, 36000.76983, 0.0003032];
     var anomalyCoefficients = [357.5291, 35999.0503, -0.0001559, -4.8E-07];
@@ -97,30 +116,32 @@ var PersianDate = (function () {
     }
 
     function ticksToDate(ticks) {
-        if (ticks < 0 || ticks > 3155378941640251632)
-            throw new Error("Ticks value must be between 0 and 3155378941640251632.");
+        if (ticks < 0 || ticks > 2959075583999990000)
+            throw new Error("Ticks value must be between 0 and 2959075583999990000.");
         var year = 1, month = 0, day = 1;
+        var ticksInYear = 31536000000;
+        var ticksInDay = 86400000;
         ticks /= 10000;
 
-        year += parseInt(ticks / 31536000000);
-        ticks %= 31536000000;
+        year += parseInt(ticks / ticksInYear);
+        ticks %= ticksInYear;
         var y = year - 1;
-        ticks -= (parseInt(y / 4) - parseInt(y / 100) + parseInt(y / 400)) * 86400000;
+        ticks -= (parseInt(y / 4) - parseInt(y / 100) + parseInt(y / 400)) * ticksInDay;
 
         while (ticks < 0) {
-            ticks += 31536000000;
+            ticks += ticksInYear;
             if (Date.isLeap(year))
-                ticks += 86400000;
+                ticks += ticksInDay;
             year--;
         }
-        var tmp = Date.getDaysInMonth(year, month + 1) * 86400000;
+        var tmp = Date.getDaysInMonth(year, month + 1) * ticksInDay;
         while (ticks >= tmp) {
             ticks -= tmp;
             month++;
-            tmp = Date.getDaysInMonth(year, month + 1) * 86400000;
+            tmp = Date.getDaysInMonth(year, month + 1) * ticksInDay;
         }
-        day += parseInt(ticks / 86400000);
-        ticks %= 86400000;
+        day += parseInt(ticks / ticksInDay);
+        ticks %= ticksInDay;
         var hour = parseInt(ticks / 3600000);
         ticks %= 3600000;
         var minute = parseInt(ticks / 60000);
@@ -361,7 +382,21 @@ var PersianDate = (function () {
         input = input.toString();
         return input.length >= len ? input : new Array(len - input.length + 1).join(char) + input;
     }
-
+    function getPersianDate(date) {
+        var pdate = date;
+        if (date instanceof Date)
+            pdate = PersianDate.fromDate(date);
+        else if (!(date instanceof PersianDate))
+            throw new Error("Invalid parameter date");
+        return pdate;
+    }
+    function toTicks(days, hours, minutes, seconds, milliseconds) {
+        return (days * 86400000 +
+            hours * 3600000 +
+            minutes * 60000 +
+            seconds * 1000 +
+            milliseconds) * 10000;
+    }
     function persianDateConstructor(year, month, day, hour, minute, second, millisecond) {
         var _year, _month, _day;
         var _hour, _minute, _second, _millisecond;
@@ -429,31 +464,43 @@ var PersianDate = (function () {
                         return self.day + daysToMonth[self.month - 1];
                     }
                 },
+                weekOfYear: {
+                    get: function () {
+                        return parseInt((self.dayOfYear + self.firstDateOfYear.dayOfWeek + 5) / 7);
+                    }
+                },
+                weeksOfYear: {
+                    get: function () {
+                        return self.lastDateOfYear.weekOfYear;
+                    }
+                },
                 dayName: {
                     get: function () {
-                        var sum = self.numberOfDays % 7;
-
                         var dayOfWeek = $.map($.enums.fa.dayOfWeek,
                             function (value) {
                                 return value;
                             });
-                        return (sum >= 2 ? dayOfWeek[sum - 2] : dayOfWeek[sum + 5]);
+                        return dayOfWeek[this.dayOfWeek - 1];
                     }
                 },
                 shortDayName: {
                     get: function () {
-                        var sum = self.numberOfDays % 7;
                         var dayOfWeek = $.map($.enums.fa.shortDayOfWeek,
                             function (value) {
                                 return value;
                             });
-                        return (sum >= 2 ? dayOfWeek[sum - 2] : dayOfWeek[sum + 5]);
+                        return dayOfWeek[this.dayOfWeek - 1];
                     }
                 },
                 dayOfWeek: {
                     get: function () {
                         var sum = self.numberOfDays % 7;
-                        return (sum >= 2 ? sum - 2 : sum + 5);
+                        return (sum >= 2 ? sum - 1 : sum + 6);
+                    }
+                },
+                daysInMonth: {
+                    get: function () {
+                        return PersianDate.getDaysInMonth(self.year, self.month);
                     }
                 },
                 monthName: {
@@ -466,16 +513,26 @@ var PersianDate = (function () {
                         return PersianDate.getShortMonthName(self.month);
                     }
                 },
+                seasonName: {
+                    get: function () {
+                        return PersianDate.getSeasonName(self.month);
+                    }
+                },
+                season: {
+                    get: function () {
+                        return PersianDate.getSeason(self.month);
+                    }
+                },
                 firstDateOfWeek: {
                     get: function () {
-                        var date = new PersianDate(self.year, self.month, self.day);
-                        return date.addDays(-1 * this.dayOfWeek);
+                        var pdate = new PersianDate(self.year, self.month, self.day);
+                        return pdate.addDays(-1 * (this.dayOfWeek - 1));
                     }
                 },
                 lastDateOfWeek: {
                     get: function () {
                         var date = new PersianDate(self.year, self.month, self.day);
-                        return date.addDays(6 - this.dayOfWeek);
+                        return date.addDays(7 - this.dayOfWeek);
                     }
                 },
                 firstDateOfMonth: {
@@ -492,18 +549,32 @@ var PersianDate = (function () {
                 lastDateOfYear: {
                     get: function () { return new PersianDate(self.year, 12, PersianDate.getDaysInMonth(self.year, 12)); }
                 },
-                datedate: {
+                date: {
                     get: function () { return new PersianDate(self.year, self.month, self.day); }
                 },
                 ticks: {
                     get: function () {
-                        var sum = self.numberOfDays - 1;
-                        sum = sum * 86400000 +
-                            self.hour * 3600000 +
-                            self.minute * 60000 +
-                            self.second * 1000 +
-                            self.millisecond;
-                        return sum * 10000;
+                        return toTicks(self.numberOfDays - 1, self.hour, self.minute, self.second, self.millisecond);
+                    }
+                },
+                ticksOfYear: {
+                    get: function () {
+                        return toTicks(self.dayOfYear - 1, self.hour, self.minute, self.second, self.millisecond);
+                    }
+                },
+                ticksOfMonth: {
+                    get: function () {
+                        return toTicks(self.day - 1, self.hour, self.minute, self.second, self.millisecond);
+                    }
+                },
+                ticksOfWeek: {
+                    get: function () {
+                        return toTicks(self.dayOfWeek - 1, self.hour, self.minute, self.second, self.millisecond);
+                    }
+                },
+                ticksOfDay: {
+                    get: function () {
+                        return toTicks(0, self.hour, self.minute, self.second, self.millisecond);
                     }
                 },
                 numberOfDays: {
@@ -513,7 +584,7 @@ var PersianDate = (function () {
                         var fractions = parseInt(y / 450);
                         sum += fractions * 109;
                         if (y >= 8100)
-                            sum -= fractions;
+                            sum--;
                         var start = fractions * 450;
                         sum += start * 365;
                         for (var i = start + 1; i <= y; i++) {
@@ -588,8 +659,31 @@ var PersianDate = (function () {
             return this.set(persiandate.year, persiandate.month, persiandate.day, persiandate.hour, persiandate.minute, persiandate.second, persiandate.millisecond);
         },
         addMonths: function (n) {
+            var sumOfDays = 0;
+            var year = this.year;
+            if (n > 0)
+                for (var i = this.month, end = i + n, j = i; i < end; i++) {
+                    if (j > 12) {
+                        j = 1;
+                        year++;
+                        validateYear(year);
+                    }
+                    sumOfDays += PersianDate.getDaysInMonth(year, j);
+                    j++;
+                }
+            else
+                for (var i = this.month, end = i + n, j = i - 1; i > end; i--) {
+                    if (j === 0) {
+                        j = 12;
+                        year--;
+                        validateYear(year);
+                    }
+                    sumOfDays -= PersianDate.getDaysInMonth(year, j);
+                    j--;
+                }
+
             var date = this.toDate();
-            date.setMonth(date.getMonth() + n);
+            date.setDate(date.getDate() + n);
             var persiandate = PersianDate.fromDate(date);
             return this.set(persiandate.year, persiandate.month, persiandate.day, persiandate.hour, persiandate.minute, persiandate.second, persiandate.millisecond);
         },
@@ -719,6 +813,82 @@ var PersianDate = (function () {
                     this.millisecond;
             return formattedText;
 
+        },
+        subtract: function (date) {
+            var pdate = getPersianDate(date);
+
+            return this.ticks - pdate.ticks;
+        },
+        compareTo: function (date) {
+            return Math.sign(this.subtract(date));
+        },
+        equals: function (date) {
+            return this.subtract(date) === 0;
+        },
+        notEquals: function (date) {
+            return this.subtract(date) !== 0;
+        },
+        gt: function (date) {
+            return this.subtract(date) > 0;
+        },
+        gte: function (date) {
+            return this.subtract(date) >= 0;
+        },
+        lt: function (date) {
+            return this.subtract(date) < 0;
+        },
+        lte: function (date) {
+            return this.subtract(date) <= 0;
+        },
+
+        diff: function (date, part) {
+            var pdate = getPersianDate(date);
+            var dateParts = $.enums.fa.dateParts;
+            var minDate = this, maxDate = pdate, sign = -1;
+            if (this.gt(pdate)) {
+                minDate = pdate;
+                maxDate = this;
+                sign = 1;
+            }
+            switch (part) {
+                case dateParts.YEAR:
+                    return this.year - pdate.year;
+                case dateParts.MONTH:
+                    var diffYear = maxDate.year - minDate.year - 1;
+                    var diffMonth = maxDate.month - minDate.month;
+                    if (diffYear === -1) {
+                        diffYear = 0;
+                    } else {
+                        diffMonth += 12;
+                    }
+                    return sign * (diffYear * 12 + diffMonth);
+                case dateParts.DAY:
+                    return this.numberOfDays - pdate.numberOfDays;
+                case dateParts.HOUR:
+                    return (this.ticks - pdate.ticks) / 36000000000;
+                case dateParts.MINUTE:
+                    return (this.ticks - pdate.ticks) / 600000000;
+                case dateParts.SECOND:
+                    return (this.ticks - pdate.ticks) / 100000000;
+                case dateParts.MILLISECOND:
+                    return (this.ticks - pdate.ticks) / 10000;
+                case dateParts.WEEK:
+                    var sumOfWeek = maxDate.weekOfYear - minDate.weekOfYear;
+                    for (var i = minDate.year, end = maxDate.year; i < end; i++) {
+                        sumOfWeek += PersianDate.getWeeksOfYear(i);
+                    }
+                    return sign * sumOfWeek;
+                case dateParts.SEASON:
+                    var diffYear = maxDate.year - minDate.year - 1;
+                    if (diffYear === -1) {
+                        diffYear = 0;
+                    }
+                    var sumOfSeason = maxDate.season - minDate.season;
+                    sumOfSeason += diffYear * 4;
+                    return sign * sumOfSeason;
+                default:
+                    throw new Error("Invalid argument part");
+            }
         }
 
     }
@@ -750,7 +920,7 @@ var PersianDate = (function () {
         return monthName[month - 1];
     };
     persianDateConstructor.parse = function (dateString) {
-        
+
         if (!dateString.trim()) throw new Error("Invalid date and time.");
         dateString = dateString.trim();
         var pattern = /^((\d{1,4}\/\d{1,2}\/\d{1,2})?\s*(\d{1,2}\:\d{1,2}(\:\d{1,2}(\.\d{1,3})?)?)?)$/g;
@@ -759,7 +929,7 @@ var PersianDate = (function () {
         if (len === 0 || len > 1 || matches[0] !== dateString) throw new Error("Invalid date and time.");
 
         var dateTimeParts = dateString.split(/\s+/g);
-        var date = "",time="";
+        var date = "", time = "";
         if (dateTimeParts.length === 2) {
             date = dateTimeParts[0];
             time = dateTimeParts[1];
@@ -783,16 +953,42 @@ var PersianDate = (function () {
             hour = parseInt(parts[0]);
             minute = parseInt(parts[1]);
             len = parts.length;
-            if(len>2)
-            second = parseInt(parts[2]);
-            if(len>3)
-            millisecond = parseInt(parts[3]);
+            if (len > 2)
+                second = parseInt(parts[2]);
+            if (len > 3)
+                millisecond = parseInt(parts[3]);
         }
         return new PersianDate(year, month, day, hour, minute, second, millisecond);
-    }
-    persianDateConstructor.fromTicks = function(ticks) {
+    };
+    persianDateConstructor.min = function (date1, date2) {
+        var pdate1 = getPersianDate(date1),
+            pdate2 = getPersianDate(date2);
+        return pdate1.lte(pdate2) ? pdate1 : pdate2;
+    };
+    persianDateConstructor.max = function (date1, date2) {
+        var pdate1 = getPersianDate(date1),
+            pdate2 = getPersianDate(date2);
+        return pdate1.gte(pdate2) ? pdate1 : pdate2;
+    };
+    persianDateConstructor.getSeasonName = function (month) {
+        var season = PersianDate.getSeason(month);
+        var seasonName = $.map($.enums.fa.seasonName, function (value) {
+            return value;
+        });
+        return seasonName[season - 1];
+    };
+    persianDateConstructor.getSeason = function (month) {
+        validateMonth(month);
+        return (month + 2) / 3;
+    };
+    persianDateConstructor.getWeeksOfYear = function (year) {
+        validateYear(year);
+        return new PersianDate(year, 12, 1).lastDateOfYear.weekOfYear;
+    };
+
+    persianDateConstructor.fromTicks = function (ticks) {
         if (ticks < 0 || ticks > 2959075583999990000)
-            throw new Error("Ticks value must be between 0 and 3155378941640251632.");
+            throw new Error("Ticks value must be between 0 and 2959075583999990000.");
         var year = 1;
         var month = 1;
         var day = 1;
@@ -823,18 +1019,18 @@ var PersianDate = (function () {
             ticks += ticksInYear;
             year--;
             if (PersianDate.isLeap(year))
-                ticks+=ticksInDay;
+                ticks += ticksInDay;
         }
 
-        var ticksInMonth = PersianDate.getDaysInMonth(year, month)*ticksInDay;
+        var ticksInMonth = PersianDate.getDaysInMonth(year, month) * ticksInDay;
         while (ticks >= ticksInMonth) {
             ticks -= ticksInMonth;
             month++;
             ticksInMonth = PersianDate.getDaysInMonth(year, month) * ticksInDay;
         }
-        
 
-        day +=parseInt(ticks / ticksInDay);
+
+        day += parseInt(ticks / ticksInDay);
         ticks %= ticksInDay;
         var hour = parseInt(ticks / 3600000);
         ticks %= 3600000;
@@ -894,6 +1090,8 @@ var PersianDate = (function () {
             day += sum;
         return new PersianDate(year, month, day, date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds());
     };
+
+
     Object.defineProperties(persianDateConstructor,
         {
             MAX_VALUE: {

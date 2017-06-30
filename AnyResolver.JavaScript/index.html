@@ -9,13 +9,38 @@
 </head>
 <body>
 <script>
+
+    var format = "dddd dd MMMM yyyy ساعت HH:mm:ss.fff";
+    var date1 = PersianDate.now;
+    var date2 = new PersianDate(1396, 1, 11);
+    showDate("Now: " +date1.toString(format));
+    showDate("Day Name: " +date1.dayName);
+    showDate("Day of Week: " + date1.dayOfWeek);
+    showDate("Day of Year: " +date1.dayOfYear);
+    showDate("Days in Month: " +date1.daysInMonth);
+    showDate("First Date of Month: " +date1.firstDateOfMonth.toString(format));
+    showDate("First Date of Week: " +date1.firstDateOfWeek.toString(format));
+    showDate("First Date of Year: " +date1.firstDateOfYear.toString(format));
+    showDate("Last Date of Month: " +date1.lastDateOfMonth.toString(format));
+    showDate("Last Date of Week: " +date1.lastDateOfWeek.toString(format));
+    showDate("Last Date of Year: " +date1.lastDateOfYear.toString(format));
+    showDate("Month Name: " + date1.monthName);
+    showDate("Season: " + date1.season);
+    showDate("Season Name: " + date1.seasonName);
+    showDate("Short Day Name: " + date1.shortDayName);
+    showDate("Short Month Name: " + date1.shortMonthName);
+    showDate("Ticks of Day: " + date1.ticksOfDay);
+    showDate("Ticks of Month: " + date1.ticksOfMonth);
+    showDate("Ticks of Week: " + date1.ticksOfWeek);
+    showDate("Ticks of Year: " + date1.ticksOfYear);
+    showDate("Week of Year: " +date1.weekOfYear);
+    showDate("Weeks of Year: " +date1.weeksOfYear);
+
     
-    var date = PersianDate.now;
-    $("<div dir='rtl'/>").text(date.toString("dddd dd MMMM yyyy ساعت HH:mm:ss.fff")).appendTo("body");
 
-    date = new PersianDate("1396/4/3 22:15:25.453");
-    $("<div dir='rtl'/>").text(date.toString("dddd dd MMMM yyyy ساعت HH:mm:ss.fff")).appendTo("body");
-
+    function showDate(input) {
+        $("<div/>").text(input).appendTo("body");
+    }
 </script>
 </body>
 </html>
